@@ -1,0 +1,20 @@
+{
+  "name": "work-tracker",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^25.9.8"
+  },
+  "dependencies": {
+    "active-win": "^8.2.1",
+    "active-window": "^0.1.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "description": ""
+}
