@@ -11,9 +11,11 @@ Work Tracker AI is a sleek, modern desktop application that helps you monitor an
 
 ## 🎨 Screenshots
 
-![Light Mode](assets/screenshots/whitemode.png)
-![Dark Mode](assets/screenshots/darkmode.png)
-![Credits](assets/screenshots/credits.png)
+<div align="center">
+  <img src="assets/screenshots/whitemode.png" alt="Light Mode" width="32%" />
+  <img src="assets/screenshots/darkmode.png" alt="Dark Mode" width="32%" />
+  <img src="assets/screenshots/credits.png" alt="Credits" width="32%" />
+</div>
 
 ## ✨ Key Features
 
@@ -50,7 +52,7 @@ Work Tracker AI is a sleek, modern desktop application that helps you monitor an
 3. Launch Work Tracker AI from your Start Menu
 
 #### Option 2: Build from Source
-```bash
+
 # Clone the repository
 git clone https://github.com/alexkanchev/work-tracker-ai.git
 
