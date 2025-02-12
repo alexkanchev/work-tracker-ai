@@ -95,7 +95,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE.txt) 
 ## 🙏 Acknowledgments
 
 - Icon by Adrien Coquet from Noun Project
-- Created by [Aleksandar Kanchev](https://github.com/alexkanchev)
 
 ---
 
