@@ -53,16 +53,16 @@ Work Tracker AI is a sleek, modern desktop application that helps you monitor an
 
 #### Option 2: Build from Source
 ```bash
-1. Clone the repository
+# Clone the repository
 git clone https://github.com/alexkanchev/AI-Work-Tracker.git
 
-2. Install dependencies
+# Install dependencies
 npm install
 
-3. Start the application
+# Start the application
 npm start
 
-4. Build the installer
+# Build the installer
 npm run dist
 ```
 
