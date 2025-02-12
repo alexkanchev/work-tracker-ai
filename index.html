@@ -1,16 +1,121 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Work Tracker</title>
+    <title>Work Tracker AI</title>
     <link rel="stylesheet" href="app/styles.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Add Poppins font for modern look -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Add SpaceGrotesk for the title -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <h1>Work Tracker</h1>
-    <div id="content">
-        <p>Tracking your productivity...</p>
+    <!-- Update titlebar section -->
+    <div class="titlebar">
+        <div class="titlebar-buttons">
+            <button id="infoBtn" class="titlebar-button info-button">
+                <span class="material-icons">info</span>
+            </button>
+            <button id="minimizeBtn" class="titlebar-button">
+                <span class="material-icons">remove</span>
+            </button>
+            <button id="closeBtn" class="titlebar-button">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+    </div>
+    <div class="container">
+        <div class="header">
+            <div class="app-title">
+                <img src="assets/icon.png" class="app-icon" alt="Work Tracker AI Icon">
+                <h1>Work Tracker <span class="ai-text">AI</span></h1>
+            </div>
+            <button id="themeToggle" class="theme-toggle">
+                <span class="material-icons">dark_mode</span>
+            </button>
+        </div>
+        
+        <button id="trackingToggle" class="toggle-button">
+            <span class="material-icons">play_arrow</span>
+            <span class="button-text">Start Tracking</span>
+        </button>
+        
+        <!-- Update the stats container section -->
+        <div class="stats-container">
+            <div class="top-stats">
+                <div class="stat-box efficiency-box">
+                    <h3>Efficiency</h3>
+                    <p id="efficiency" class="glow">0%</p>
+                </div>
+
+                <div class="stat-box current-app-box">
+                    <h3>Current Application</h3>
+                    <p id="currentApp">-</p>
+                    <p id="status">-</p>
+                </div>
+            </div>
+
+            <div class="stat-box time-box">
+                <h3>Time Tracked</h3>
+                <div class="time-stats">
+                    <div class="time-item">
+                        <label>Total:</label>
+                        <span id="totalTime">0h 0m 0s</span>
+                    </div>
+                    <div class="time-item">
+                        <label>Productive:</label>
+                        <span id="productiveTime">0h 0m 0s</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add modal for app info -->
+    <div id="infoModal" class="modal">
+        <div class="modal-content">
+            <h2>About Work Tracker AI</h2>
+            <div class="version">Version 1.1.0</div>
+            
+            <div class="credits">
+                <h3>Credits</h3>
+                <p>Created by <a href="https://github.com/alexkanchev" target="_blank">Aleksandar Kanchev</a></p>
+                <p>Icon by Adrien Coquet from Noun Project</p>
+            </div>
+
+            <div class="license">
+                <h3>License</h3>
+                <p>This project is licensed under the MIT License - see the LICENSE file for details.</p>
+            </div>
+            
+            <button id="closeModal" class="modal-close">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
     </div>
     <script src="app/renderer.js"></script>
+    <script>
+        const { BrowserWindow } = require('electron');
+        const path = require('path');
+
+        function createWindow() {
+            win = new BrowserWindow({
+                width: 900,
+                height: 700,
+                frame: false,
+                resizable: false,
+                transparent: true,
+                icon: path.join(__dirname, 'assets/icon.ico'), // Keep this for app icon
+                webPreferences: {
+                    nodeIntegration: true,
+                    contextIsolation: false
+                }
+            });
+
+            win.loadFile('index.html');
+        }
+    </script>
 </body>
 </html>

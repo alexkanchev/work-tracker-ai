@@ -3,104 +3,87 @@
 > Boost your productivity with AI-powered activity tracking and insights
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/alexkanchev/work-tracker-ai/releases)
 
 ## 📖 Overview
 
-AI Work Tracker is a powerful cross-platform desktop application that revolutionizes how you monitor and improve your work productivity. It automatically tracks your screen activity, provides smart categorization, and delivers insights through efficiency scores.
+Work Tracker AI is a sleek, modern desktop application that helps you monitor and improve your productivity. It runs silently in the background, tracking your application usage and providing real-time efficiency scores.
+
+## 🎨 Screenshots
+
+![Light Mode](assets/screenshots/whitemode.png)
+![Dark Mode](assets/screenshots/darkmode.png)
+![Credits](assets/screenshots/credits.png)
 
 ## ✨ Key Features
 
-### 🤖 Intelligent Activity Tracking
-- Automatic screen activity monitoring
-- Smart categorization of productive vs. non-productive tasks
-- Privacy-focused design with local data processing (still have some work to do)
+### 🎯 Real-Time Tracking
+- Automatic application monitoring
+- Intelligent productivity categorization
+- Real-time efficiency scoring
+- Dark/Light theme support
+
+### 💻 Developer-Focused
+- Recognizes popular IDEs and development tools
+- Tracks coding time across different editors
+- Supports version control applications
+- Includes terminal and command-line tools
 
 ### 🛡️ Privacy & Performance
-- Lightweight background processing
-- Local data storage
-- Customizable privacy settings
-- Minimal system resource usage
-
-(TBD)
-### 📊 Advanced Analytics
-- Real-time efficiency scoring
-- Detailed productivity trends
-- Custom category management
-- Visual reports and insights
-
-### ⚡ Productivity Tools
-- Daily and weekly summary reports
-- Goal setting and tracking
-- Custom notification triggers
-- Export capabilities for further analysis
+- Local-only data processing
+- No cloud synchronization
+- Minimal resource usage
+- Completely private tracking
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 - Node.js (v14 or higher)
-- npm or yarn package manager
-- Windows 10+ or macOS 10.14+
+- npm package manager
+- Windows 10+
 
 ### Installation
 
-1. **Clone the Repository**
-```bash
-git clone https://github.com/your-username/AI-Work-Tracker.git
-cd AI-Work-Tracker
-```
+#### Option 1: Install from Release
+1. Download the latest installer from [Releases](https://github.com/alexkanchev/work-tracker-ai/releases)
+2. Run the installer
+3. Launch Work Tracker AI from your Start Menu
 
-2. **Install Dependencies**
+#### Option 2: Build from Source
 ```bash
+# Clone the repository
+git clone https://github.com/alexkanchev/work-tracker-ai.git
+
+# Install dependencies
 npm install
-# or with yarn
-yarn install
-```
 
-3. **Launch the Application**
-```bash
+# Start the application
 npm start
-# or with yarn
-yarn start
-```
 
-## 🎨 Screenshots
+# Build the installer
+npm run dist
 
-![Screenshot 1](assets/screenshots/screenshot1.png)
+## 🎨 Interface
 
-### Development Process if you want to help out
-1. Fork the repo
-2. Create a new branch: `git checkout -b feature/amazing-feature`
-3. Make your changes and commit: `git commit -m 'Add amazing feature'`
-4. Push to your fork: `git push origin feature/amazing-feature`
-5. Open a Pull Request
+- **Clean, Modern Design**: Minimalist interface with smooth animations
+- **Real-Time Updates**: Live efficiency tracking and application monitoring
+- **Dark Mode**: Built-in dark mode support
 
 ## 🐛 Bug Reports
 
 Found a bug? Please open an issue and include:
-- Your operating system and version
-- Steps to reproduce the bug
-- Expected vs actual behaviour
-- Screenshots if possible 🙏
-
-## 📘 Documentation
-
-TBD
+- Operating system version
+- Steps to reproduce
+- Expected vs actual behavior
+- Screenshots if applicable
 
 ## 🔮 Roadmap
 
-- [ ] Machine learning improvements for activity categorization
-- [ ] Team collaboration features
-- [ ] Integration with popular productivity tools
-- [ ] Advanced reporting and analytics dashboard
-
-## 💡 Why AI Work Tracker?
-
-It works entirely in the background and helps you:
-
-- **Gain Insights**: Understand your work patterns and identify areas for improvement
-- **Make Better Decisions**: Use data-driven insights to optimize your workflow
-- **Save Time**: Automate productivity tracking and reporting instead of manually entering your hours worked and what you worked on
+- [ ] Data persistence between sessions
+- [ ] Custom application categories
+- [ ] Detailed analytics dashboard
+- [ ] Export capabilities
+- [ ] Activity insights and suggestions
 
 ## 📄 License
 
@@ -108,10 +91,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE.txt) 
 
 ## 🙏 Acknowledgments
 
-- [Aleksandar Kanchev](https://github.com/alexkanchev) - Project creator
+- Icon by Adrien Coquet from Noun Project
+- Created by [Aleksandar Kanchev](https://github.com/alexkanchev)
 
 ---
 
 <div align="center">
-💖 by Aleksandar Kanchev
+Made by Aleksandar Kanchev 💖
 </div>

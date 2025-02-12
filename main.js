@@ -1,10 +1,8 @@
-const { app, BrowserWindow } = require('electron');
-const activeWin = require('active-win'); // For tracking the active window
+const { app, BrowserWindow, ipcMain } = require('electron');
+const activeWin = require('active-win');
 const path = require('path');
 
 let win;
-
-// Example list of productive apps (you can expand this based on your needs)
 const productiveApps = [
   // Programming and Development
   'Visual Studio Code', 'IntelliJ IDEA', 'PyCharm', 'Eclipse', 'Atom', 'Sublime Text', 
@@ -28,32 +26,113 @@ const productiveApps = [
   'Microsoft Excel', 'Google Sheets', 'Airtable'
 ];
 
-let workStartTime = null;
-let workDuration = 0; // Tracks total productive time in seconds
-let nonProductiveDuration = 0; // Tracks non-productive time
+// Track total time and productive time
+let totalTimeSeconds = 0;
+let productiveTimeSeconds = 0;
+let lastUpdateTime = null;
 
 // Function to calculate efficiency score
 function calculateEfficiency() {
-  const totalTime = workDuration + nonProductiveDuration;
-  const efficiency = totalTime > 0 ? (workDuration / totalTime) * 100 : 0;
-  return efficiency;
+  return totalTimeSeconds > 0 ? (productiveTimeSeconds / totalTimeSeconds) * 100 : 0;
 }
 
-// Function to save the time data (for example, to a simple log or database)
-function saveWorkTime() {
+// Helper function to format time with hours, minutes, and seconds
+function formatTime(totalSeconds) {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = Math.floor(totalSeconds % 60);
+  return `${hours}h ${minutes}m ${seconds}s`;
+}
+
+// Add tracking state
+let isTracking = false;
+
+// Listen for start/stop tracking commands from renderer
+ipcMain.on('toggle-tracking', (event, shouldTrack) => {
+  isTracking = shouldTrack;
+  if (!shouldTrack) {
+    // Pause the timestamp when stopping
+    lastUpdateTime = null;
+  }
+});
+
+// Add these handlers near the top with other IPC handlers
+ipcMain.on('minimize-window', () => {
+    if (win) {
+        win.minimize();
+    }
+});
+
+ipcMain.on('close-window', () => {
+    if (win) {
+        win.close();
+    }
+});
+
+// Function to update time tracking
+async function updateTimeTracking() {
+  if (!isTracking) return;
+
+  const activeWindow = await activeWin();
+  const currentTime = Date.now();
+  
+  // Initialize lastUpdateTime if it's the first run
+  if (!lastUpdateTime) {
+    lastUpdateTime = currentTime;
+    return;
+  }
+
+  // Calculate time elapsed since last update (in seconds)
+  const elapsedSeconds = (currentTime - lastUpdateTime) / 1000;
+  
+  // Update total time
+  totalTimeSeconds += elapsedSeconds;
+
+  // Check if current app is productive
+  const isProductive = productiveApps.some(app => 
+    activeWindow?.owner?.name?.toLowerCase().includes(app.toLowerCase())
+  );
+
+  // Update productive time if current activity is productive
+  if (isProductive) {
+    productiveTimeSeconds += elapsedSeconds;
+  }
+
+  // Calculate and log current efficiency
   const efficiency = calculateEfficiency();
-  console.log(`Efficiency: ${efficiency.toFixed(2)}%`);
-  // Here you can save the efficiency score to a database or a file for further analysis
+
+  // Send data to renderer
+  if (win) {
+    win.webContents.send('tracking-update', {
+      currentApp: activeWindow?.owner?.name || 'Unknown',
+      isProductive: isProductive,
+      efficiency: efficiency.toFixed(2),
+      totalTime: formatTime(totalTimeSeconds),
+      productiveTime: formatTime(productiveTimeSeconds)
+    });
+  }
+
+  // Update last update time
+  lastUpdateTime = currentTime;
 }
 
-// Create the window
 function createWindow() {
   win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 900,
+    height: 700,
+    frame: false,
+    resizable: false,
+    transparent: true,
+    icon: path.join(__dirname, 'assets/icon.ico'),
     webPreferences: {
       nodeIntegration: true,
+      contextIsolation: false
     },
+    show: false // Hide window until ready
+  });
+
+  win.once('ready-to-show', () => {
+    win.show(); // Show window when ready
   });
 
   win.loadFile('index.html');
@@ -61,37 +140,9 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
-
-  // Track the active window every second
-  setInterval(async () => {
-    const activeWindow = await activeWin();
-    const isProductive = productiveApps.some((app) =>
-      activeWindow.owner.name.includes(app)
-    );
-
-    // If the window is productive, start or continue the work timer
-    if (isProductive) {
-      if (!workStartTime) {
-        workStartTime = Date.now(); // Start tracking work time
-      } else {
-        workDuration = Math.floor((Date.now() - workStartTime) / 1000); // Update work duration
-      }
-      nonProductiveDuration = 0; // Reset non-productive duration
-    } else {
-      // If it's non-productive, start or continue the non-productive timer
-      if (workStartTime) {
-        nonProductiveDuration = Math.floor((Date.now() - workStartTime) / 1000); // Update non-productive duration
-        workStartTime = null; // Reset work start time when switching to non-productive
-      }
-    }
-
-    // Log the details of the currently active window and status
-    const status = isProductive ? 'productive' : 'non-productive';
-    console.log(`Currently working on ${activeWindow.owner.name} (${status})`);
-
-    // Periodically save the work time and efficiency score
-    saveWorkTime();
-  }, 1000); // Check every second
+  
+  // Increase tracking frequency to 100ms (10 times per second)
+  setInterval(updateTimeTracking, 100);
 });
 
 app.on('window-all-closed', () => {

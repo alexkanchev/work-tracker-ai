@@ -1,20 +1,41 @@
 {
-  "name": "work-tracker",
-  "version": "1.0.0",
+  "name": "work-tracker-ai",
+  "version": "1.1.0",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "build": "electron-builder",
+    "dist": "electron-builder --windows",
+    "dist-cmd": "cmd.exe /c electron-builder --windows"
   },
   "devDependencies": {
-    "electron": "^25.9.8"
+    "electron": "^27.1.0",
+    "electron-builder": "^24.9.1"
   },
   "dependencies": {
-    "active-win": "^8.2.1",
-    "active-window": "^0.1.0"
+    "active-win": "^8.1.1"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Aleksandar Kanchev",
+  "license": "MIT",
   "type": "commonjs",
-  "description": ""
+  "description": "AI-powered productivity tracker",
+  "build": {
+    "appId": "com.worktracker.ai",
+    "productName": "Work Tracker AI",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": ["nsis"],
+      "icon": "assets/icon.ico",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
 }

@@ -1,17 +1,404 @@
-body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    background-color: #f4f4f4;
-    color: #333;
+:root {
+    /* Light theme */
+    --bg-light: #f8f9fa;
+    --text-light: #212529;
+    --card-light: #ffffff;
+    --accent-light: #22c55e; /* Changed to a green shade */
+    --shadow-light: rgba(0, 0, 0, 0.1);
+    
+    /* Dark theme */
+    --bg-dark: #1a1b1e;
+    --text-dark: #e4e5e7;
+    --card-dark: #2c2d30;
+    --accent-dark: #4ade80; /* Changed to a lighter green */
+    --shadow-dark: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] {
+    --bg-color: var(--bg-dark);
+    --text-color: var(--text-dark);
+    --card-bg: var(--card-dark);
+    --accent-color: var(--accent-dark);
+    --shadow-color: var(--shadow-dark);
+}
+
+[data-theme="light"] {
+    --bg-color: var(--bg-light);
+    --text-color: var(--text-light);
+    --card-bg: var(--card-light);
+    --accent-color: var(--accent-light);
+    --shadow-color: var(--shadow-light);
+}
+
+* {
     margin: 0;
-    padding: 20px;
+    padding: 0;
+    box-sizing: border-box;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+body {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    padding: 0;
+    overflow: hidden;
+    margin: 0;
+    min-height: 100vh;
+}
+
+/* Add these new animation styles */
+@keyframes minimizeEffect {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+}
+
+.minimizing {
+  animation: minimizeEffect 0.3s ease-in forwards;
+  pointer-events: none;
+}
+
+/* Update the container class */
+.container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 1rem 2rem;
+    height: calc(100vh - 32px);
+    overflow: hidden;
+    transform-origin: top right;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Update header and title styles */
+.header {
+    margin-bottom: 2rem;
 }
 
 h1 {
-    color: #0078d4;
+    text-align: center;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(45deg, var(--accent-color), #60efff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0;
 }
 
-#content {
-    margin-top: 20px;
-    font-size: 1.2em;
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(45deg, var(--accent-color), #60efff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0;
+}
+
+.ai-text {
+    color: var(--accent-color);
+    font-weight: 800;
+}
+
+.theme-toggle {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+    background-color: var(--shadow-color);
+    transform: scale(1.1);
+}
+
+.toggle-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin: 0 auto 2rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+.toggle-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+.toggle-button.stopping {
+    background: linear-gradient(45deg, #f44336, #d32f2f);
+    box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+}
+
+/* Update stats container layout */
+.stats-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: 2rem;
+    padding-bottom: 1rem;
+}
+
+.top-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+/* Optional: Adjust card sizes to fit better */
+.stat-box {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px var(--shadow-color);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    min-height: 180px; /* Set minimum height */
+}
+
+.stat-box:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px var(--shadow-color);
+}
+
+.stat-box h3 {
+    color: var(--text-color);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 1rem;
+    opacity: 0.8;
+}
+
+/* Make sure efficiency number fits */
+#efficiency {
+    font-size: 2.8rem; /* Slightly smaller font size */
+    font-weight: 600;
+    color: var(--accent-color);
+    text-align: center;
+}
+
+.glow {
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from {
+        text-shadow: 0 0 5px var(--accent-color),
+                     0 0 10px var(--accent-color),
+                     0 0 15px var(--accent-color);
+    }
+    to {
+        text-shadow: 0 0 10px var(--accent-color),
+                     0 0 20px var(--accent-color),
+                     0 0 30px var(--accent-color);
+    }
+}
+
+/* Update time stats layout */
+.time-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.time-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1rem;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.productive {
+    color: #4CAF50;
+    font-weight: 500;
+}
+
+.non-productive {
+    color: #f44336;
+    font-weight: 500;
+}
+
+/* Make time box take full width */
+.time-box {
+    width: 100%;
+}
+
+/* Update title bar styles */
+.titlebar {
+    -webkit-app-region: drag;
+    height: 32px;
+    background: transparent;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0 0.5rem;
+}
+
+.titlebar-drag {
+    display: none; /* Remove the title text */
+}
+
+.titlebar-buttons {
+    -webkit-app-region: no-drag;
+    display: flex;
+    gap: 0.25rem; /* Reduced gap between buttons */
+}
+
+.titlebar-button {
+    background: transparent;
+    border: none;
+    color: var(--text-color);
+    opacity: 0.7;
+    padding: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.titlebar-button:hover {
+    opacity: 1;
+    background-color: var(--shadow-color);
+}
+
+.titlebar-button .material-icons {
+    font-size: 18px;
+}
+
+/* Remove these styles as they're no longer needed */
+.app-info,
+.app-icon {
+    display: none;
+}
+
+.info-button {
+    margin-right: 0.5rem; /* Add space after info button */
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal.active {
+    display: flex;
+    opacity: 1;
+}
+
+.modal-content {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 2rem;
+    margin: auto;
+    position: relative;
+    width: 90%;
+    max-width: 500px;
+    transform: translateY(-20px);
+    transition: transform 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal.active .modal-content {
+    transform: translateY(0);
+}
+
+.modal h2 {
+    color: var(--text-color);
+    margin-bottom: 1rem;
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+.version {
+    color: var(--accent-color);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+}
+
+.credits, .license {
+    margin-top: 1.5rem;
+}
+
+.credits h3, .license h3 {
+    color: var(--text-color);
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.credits p, .license p {
+    color: var(--text-color);
+    opacity: 0.8;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.credits a {
+    color: var(--accent-color);
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+}
+
+.credits a:hover {
+    opacity: 0.8;
+}
+
+.modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    opacity: 0.7;
+    transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+    opacity: 1;
+    background-color: var(--shadow-color);
 }
