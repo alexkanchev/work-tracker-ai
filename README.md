@@ -1,4 +1,4 @@
-# 🎯 AI Work Tracker
+# 🎯 Work tracker AI
 
 > Boost your productivity with AI-powered activity tracking and insights
 
