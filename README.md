@@ -12,9 +12,9 @@ Work Tracker AI is a sleek, modern desktop application that helps you monitor an
 ## 🎨 Screenshots
 
 <div align="center">
-  <img src="assets/screenshots/whitemode.png" alt="Light Mode" width="32%" />
-  <img src="assets/screenshots/darkmode.png" alt="Dark Mode" width="32%" />
-  <img src="assets/screenshots/credits.png" alt="Credits" width="32%" />
+  <img src="assets/screenshots/darkmode.png" alt="Dark Mode"/>
+  <img src="assets/screenshots/whitemode.png" alt="Light Mode" width="43%" />
+  <img src="assets/screenshots/credits.png" alt="Credits" width="43%" />
 </div>
 
 ## ✨ Key Features
