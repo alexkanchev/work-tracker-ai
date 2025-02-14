@@ -94,64 +94,52 @@ ipcMain.on('close-window', () => {
   }
 });
 
-// Function to update time tracking
+// Modify the updateTimeTracking function for better performance
 async function updateTimeTracking() {
   if (!isTracking) return;
 
-  const activeWindow = await activeWin();
-  const currentTime = Date.now();
-  
-  // Initialize lastUpdateTime if it's the first run
-  if (!lastUpdateTime) {
+  try {
+    const activeWindow = await activeWin();
+    const currentTime = Date.now();
+    
+    // Initialize lastUpdateTime if it's the first run
+    if (!lastUpdateTime) {
+      lastUpdateTime = currentTime;
+      return;
+    }
+
+    const elapsedSeconds = (currentTime - lastUpdateTime) / 1000;
+    
+    // Remove the 0.5 second check
+    totalTimeSeconds += elapsedSeconds;
+
+    const isProductive = productiveApps.some(app => 
+      activeWindow?.owner?.name?.toLowerCase().includes(app.toLowerCase())
+    );
+
+    if (isProductive) {
+      productiveTimeSeconds += elapsedSeconds;
+    }
+
+    const efficiency = calculateEfficiency();
+
+    // Batch updates to renderer
+    if (win && !win.isDestroyed()) {
+      win.webContents.send('tracking-update', {
+        currentApp: activeWindow?.owner?.name || 'Unknown',
+        isProductive: isProductive,
+        efficiency: Math.round(efficiency),
+        totalTime: formatTime(totalTimeSeconds),
+        productiveTime: formatTime(productiveTimeSeconds)
+      });
+    }
+
+    // Update last update time
     lastUpdateTime = currentTime;
-    return;
+
+  } catch (error) {
+    logger.logError(error, 'Error in updateTimeTracking');
   }
-
-  // Calculate time elapsed since last update (in seconds)
-  const elapsedSeconds = (currentTime - lastUpdateTime) / 1000;
-  
-  // Update total time
-  totalTimeSeconds += elapsedSeconds;
-
-  // Check if current app is productive
-  const isProductive = productiveApps.some(app => 
-    activeWindow?.owner?.name?.toLowerCase().includes(app.toLowerCase())
-  );
-
-  // Update productive time if current activity is productive
-  if (isProductive) {
-    productiveTimeSeconds += elapsedSeconds;
-  }
-
-  // Calculate and log current efficiency
-  const efficiency = calculateEfficiency();
-
-  // Send data to renderer
-  if (win) {
-    win.webContents.send('tracking-update', {
-      currentApp: activeWindow?.owner?.name || 'Unknown',
-      isProductive: isProductive,
-      efficiency: Math.round(efficiency), // Changed from efficiency.toFixed(2)
-      totalTime: formatTime(totalTimeSeconds),
-      productiveTime: formatTime(productiveTimeSeconds)
-    });
-  }
-
-  // Log activity
-  logger.logActivity(
-    activeWindow?.owner?.name || 'Unknown',
-    isProductive
-  );
-
-  // Log efficiency
-  logger.logEfficiency(
-    Math.round(efficiency), // Changed from efficiency.toFixed(2)
-    formatTime(totalTimeSeconds),
-    formatTime(productiveTimeSeconds)
-  );
-
-  // Update last update time
-  lastUpdateTime = currentTime;
 }
 
 // Add this function to create tray
@@ -195,6 +183,9 @@ function createWindow() {
     frame: false,
     resizable: false,
     transparent: true,
+    alwaysOnTop: true,
+    focusable: true,
+    hasShadow: false,
     icon: path.join(__dirname, 'assets/icon.ico'),
     webPreferences: {
       nodeIntegration: true,
@@ -204,13 +195,12 @@ function createWindow() {
       enableWebGL: false,
       spellcheck: false,
       backgroundThrottling: false,
-      // Add these cache settings
       partition: 'persist:main',
       webSecurity: true
     },
     show: false,
     backgroundColor: '#ffffff',
-    skipTaskbar: false // Ensure it shows in taskbar
+    skipTaskbar: false
   });
 
   // Add session handling
@@ -228,12 +218,11 @@ function createWindow() {
     app.exit(0);
   });
 
-  // Add this event handler for minimize
   win.on('minimize', () => {
+    win.setAlwaysOnTop(false);
     win.setSkipTaskbar(false);
   });
 
-  // Add these window event handlers
   win.on('close', (event) => {
     if (!app.isQuitting) {
       event.preventDefault();
@@ -247,7 +236,14 @@ function createWindow() {
   });
 
   win.on('show', () => {
+    win.setAlwaysOnTop(true);
     win.setSkipTaskbar(false);
+  });
+
+  win.on('blur', () => {
+    if (!win.isMinimized() && !win.isDestroyed() && win.isVisible()) {
+      win.moveTop();
+    }
   });
 
   win.once('ready-to-show', () => {
@@ -264,12 +260,10 @@ function createWindow() {
 // Modify the app.on('ready') handler
 app.on('ready', async () => {
   try {
-    // Clear cache before creating window
     const userDataPath = app.getPath('userData');
     const cachePath = path.join(userDataPath, 'Cache');
     const gpuCachePath = path.join(userDataPath, 'GPUCache');
 
-    // Clear session cache
     const session = require('electron').session;
     await session.defaultSession.clearCache();
     await session.defaultSession.clearStorageData({
@@ -282,9 +276,10 @@ app.on('ready', async () => {
   }
 });
 
+// Modify the interval timing
 app.whenReady().then(() => {
-  // Increase tracking frequency to 100ms (10 times per second)
-  setInterval(updateTimeTracking, 100);
+  // Update every 50ms instead of 100ms
+  setInterval(updateTimeTracking, 50);
 });
 
 app.on('window-all-closed', () => {
@@ -293,7 +288,6 @@ app.on('window-all-closed', () => {
   }
 });
 
-// Add this before app.quit
 app.on('before-quit', () => {
   app.isQuitting = true;
 });

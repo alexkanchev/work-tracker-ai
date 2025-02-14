@@ -14,6 +14,23 @@
     --shadow-dark: rgba(0, 0, 0, 0.3);
 }
 
+/* Add these new animations at the top */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
 [data-theme="dark"] {
     --bg-color: var(--bg-dark);
     --text-color: var(--text-dark);
@@ -74,6 +91,7 @@ body {
     overflow: hidden;
     transform-origin: top right;
     transition: transform 0.3s ease, opacity 0.3s ease;
+    animation: fadeIn 0.3s ease-out;
 }
 
 /* Update header and title styles */
@@ -123,12 +141,11 @@ h1 {
     cursor: pointer;
     padding: 8px;
     border-radius: 50%;
-    transition: all 0.3s ease;
+    transition: background-color 0.2s ease;
 }
 
 .theme-toggle:hover {
-    background-color: var(--shadow-color);
-    transform: scale(1.1);
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 .toggle-button {
@@ -136,21 +153,26 @@ h1 {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 12px 24px;
-    background: linear-gradient(45deg, #4CAF50, #45a049);
+    padding: 12px 28px;
+    background: linear-gradient(45deg, var(--accent-color), #60efff);
     color: white;
     border: none;
     border-radius: 12px;
     cursor: pointer;
     font-size: 1rem;
     margin: 0 auto 2rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
 }
 
 .toggle-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.toggle-button:active {
+    transform: translateY(1px);
 }
 
 .toggle-button.stopping {
@@ -179,14 +201,16 @@ h1 {
     padding: 1.5rem;
     border-radius: 16px;
     box-shadow: 0 4px 20px var(--shadow-color);
-    transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    min-height: 180px; /* Set minimum height */
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    animation: fadeIn 0.5s ease-out;
+    min-height: 180px;
+    transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
 .stat-box:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 25px var(--shadow-color);
+    transform: translateY(-2px);
+    border-color: var(--accent-color);
 }
 
 .stat-box h3 {
@@ -198,28 +222,64 @@ h1 {
     opacity: 0.8;
 }
 
-/* Make sure efficiency number fits */
+/* Update the efficiency styles */
 #efficiency {
-    font-size: 2.8rem; /* Slightly smaller font size */
-    font-weight: 600;
-    color: var(--accent-color);
+    font-size: 3.2rem;
+    font-weight: 700;
     text-align: center;
+    transition: none;
 }
 
+/* Add efficiency level classes */
+#efficiency.high-efficiency {
+    background: linear-gradient(45deg, #22c55e, #4ade80); /* Changed to green gradient */
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.3)); /* Adjusted glow color */
+    text-shadow: 0 0 15px #22c55e; /* Adjusted shadow color */
+}
+
+#efficiency.medium-efficiency {
+    background: linear-gradient(45deg, #ff9800, #ffd180);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 8px rgba(255, 152, 0, 0.3));
+    text-shadow: 0 0 15px #ff9800;
+}
+
+#efficiency.low-efficiency {
+    background: linear-gradient(45deg, #f44336, #ff8a80);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 8px rgba(244, 67, 54, 0.3));
+    text-shadow: 0 0 15px #f44336;
+}
+
+/* Remove the glow class since we're using constant glow */
 .glow {
-    animation: glow 2s ease-in-out infinite alternate;
+    animation: none;
 }
 
-@keyframes glow {
-    from {
-        text-shadow: 0 0 5px var(--accent-color),
-                     0 0 10px var(--accent-color),
-                     0 0 15px var(--accent-color);
+/* Keep the emphasize animation for significant changes */
+.efficiency-changed {
+    animation: emphasize 0.3s ease-out;
+}
+
+@keyframes emphasize {
+    0% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 8px rgba(96, 239, 255, 0.3));
     }
-    to {
-        text-shadow: 0 0 10px var(--accent-color),
-                     0 0 20px var(--accent-color),
-                     0 0 30px var(--accent-color);
+    50% {
+        transform: scale(1.05);
+        filter: drop-shadow(0 0 12px rgba(96, 239, 255, 0.4));
+    }
+    100% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 8px rgba(96, 239, 255, 0.3));
     }
 }
 
@@ -228,25 +288,19 @@ h1 {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
+    margin-top: 1rem;
 }
 
 .time-item {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.03);
     padding: 1rem;
-    border-radius: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    border-radius: 12px;
+    transition: background-color 0.2s ease;
+    animation: slideIn 0.5s ease-out;
 }
 
-.productive {
-    color: #4CAF50;
-    font-weight: 500;
-}
-
-.non-productive {
-    color: #f44336;
-    font-weight: 500;
+.time-item:hover {
+    background: rgba(255, 255, 255, 0.05);
 }
 
 /* Make time box take full width */
@@ -401,4 +455,32 @@ h1 {
 .modal-close:hover {
     opacity: 1;
     background-color: var(--shadow-color);
+}
+
+/* Update current app display */
+#currentApp {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+    animation: slideIn 0.3s ease-out;
+}
+
+/* Status indicators */
+#status {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    display: inline-block;
+    margin-top: 0.5rem;
+}
+
+.productive {
+    background: rgba(76, 175, 80, 0.1);
+    color: #4CAF50;
+}
+
+.non-productive {
+    background: rgba(244, 67, 54, 0.1);
+    color: #f44336;
 }

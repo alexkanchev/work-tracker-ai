@@ -99,26 +99,31 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Handle updates from main process
+// Simplify the tracking-update handler
 ipcRenderer.on('tracking-update', (event, data) => {
     if (!isTracking) return;
     
     const efficiency = document.getElementById('efficiency');
-    const oldValue = parseFloat(efficiency.textContent);
-    const newValue = parseFloat(data.efficiency);
+    const efficiencyValue = parseFloat(data.efficiency);
     
-    // Add animation class if value changed significantly
-    if (Math.abs(oldValue - newValue) > 1) {
-        efficiency.classList.add('value-changed');
-        setTimeout(() => efficiency.classList.remove('value-changed'), 300);
+    // Direct update without animations
+    efficiency.classList.remove('low-efficiency', 'medium-efficiency', 'high-efficiency');
+    if (efficiencyValue < 30) {
+        efficiency.classList.add('low-efficiency');
+    } else if (efficiencyValue < 70) {
+        efficiency.classList.add('medium-efficiency');
+    } else {
+        efficiency.classList.add('high-efficiency');
     }
     
+    efficiency.textContent = `${Math.round(efficiencyValue)}%`;
+
+    // Update other elements
     document.getElementById('currentApp').textContent = data.currentApp;
     document.getElementById('status').textContent = 
         `Status: ${data.isProductive ? 'Productive' : 'Non-productive'}`;
     document.getElementById('status').className = 
         data.isProductive ? 'productive' : 'non-productive';
-    document.getElementById('efficiency').textContent = `${data.efficiency}%`;
     document.getElementById('totalTime').textContent = data.totalTime;
     document.getElementById('productiveTime').textContent = data.productiveTime;
 });
