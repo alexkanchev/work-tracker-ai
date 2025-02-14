@@ -25,28 +25,94 @@ app.disableHardwareAcceleration();
 
 let win = null; // Ensure win is initialized as null
 let tray = null; // Add tray variable at the top with other globals
-const productiveApps = [
-  // Programming and Development
-  'Visual Studio Code', 'IntelliJ IDEA', 'PyCharm', 'Eclipse', 'Atom', 'Sublime Text', 
-  'GitHub Desktop', 'Sourcetree', 'Terminal', 'Command Prompt', 'PowerShell',
-  
-  // Operations and Project Management
-  'Trello', 'Asana', 'Monday.com', 'Jira', 'ClickUp', 
-  'Slack', 'Microsoft Teams', 'Zoom', 'Google Meet', 'Webex', 
-  'Notion', 'Evernote', 'OneNote', 'Google Docs', 'Microsoft Word',
-  
-  // Sales and CRM
-  'Salesforce', 'HubSpot', 'Zoho CRM', 'Pipedrive', 'Zendesk',
-  
-  // Analytics and Reporting
-  'Google Analytics', 'Tableau', 'Power BI', 'Looker', 'Mixpanel',
-  
-  // Design and Creative Work
-  'Figma', 'Adobe Photoshop', 'Adobe Illustrator', 'Canva', 'Sketch',
-  
-  // Spreadsheets and Data Management
-  'Microsoft Excel', 'Google Sheets', 'Airtable'
-];
+
+// Replace the existing productiveApps array with this categorized system
+
+const productiveCategories = {
+    development: {
+        name: "Software Development",
+        apps: [
+            'Visual Studio Code', 'Visual Studio', 'IntelliJ IDEA', 'PyCharm', 'WebStorm',
+            'PhpStorm', 'Android Studio', 'Xcode', 'Eclipse', 'Atom', 'Sublime Text',
+            'Vim', 'Neovim', 'Emacs', 'NetBeans', 'CodeBlocks', 'Unity', 'Unreal Editor',
+            'GitKraken', 'GitHub Desktop', 'Sourcetree', 'Fork', 'Terminal', 'iTerm',
+            'Windows Terminal', 'Command Prompt', 'PowerShell', 'WSL', 'Docker Desktop',
+            'Postman', 'Insomnia', 'DBeaver', 'MongoDB Compass', 'pgAdmin', 'MySQL Workbench'
+        ]
+    },
+    design: {
+        name: "Design & Creative",
+        apps: [
+            'Figma', 'Adobe Photoshop', 'Adobe Illustrator', 'Adobe XD', 'Adobe InDesign',
+            'Adobe Premiere Pro', 'Adobe After Effects', 'Adobe Lightroom', 'Sketch',
+            'Canva', 'Blender', 'Maya', '3ds Max', 'ZBrush', 'Cinema 4D', 'Affinity Designer',
+            'Affinity Photo', 'CorelDRAW', 'GIMP', 'Inkscape', 'Aseprite', 'Krita'
+        ]
+    },
+    productivity: {
+        name: "Productivity & Project Management",
+        apps: [
+            'Microsoft Word', 'Microsoft Excel', 'Microsoft PowerPoint', 'Microsoft Teams',
+            'Google Docs', 'Google Sheets', 'Google Slides', 'Google Meet', 'Slack',
+            'Zoom', 'Skype', 'Discord', 'Notion', 'Evernote', 'OneNote', 'Trello',
+            'Asana', 'Monday.com', 'Jira', 'Confluence', 'ClickUp', 'Todoist', 'Things',
+            'Obsidian', 'Logseq', 'Miro', 'Figma FigJam', 'Linear', 'Height'
+        ]
+    },
+    business: {
+        name: "Business & Analytics",
+        apps: [
+            'Salesforce', 'HubSpot', 'Zoho CRM', 'Pipedrive', 'Zendesk', 'Intercom',
+            'QuickBooks', 'Xero', 'SAP', 'Oracle', 'Tableau', 'Power BI', 'Looker',
+            'Google Analytics', 'Mixpanel', 'Amplitude', 'Stripe Dashboard', 'Square',
+            'NetSuite', 'Sage', 'Freshbooks', 'Wave', 'Klaviyo', 'Mailchimp'
+        ]
+    },
+    marketing: {
+        name: "Marketing & Content",
+        apps: [
+            'Ahrefs', 'SEMrush', 'Moz Pro', 'Google Ads', 'Facebook Ads Manager',
+            'Twitter Ads', 'LinkedIn Campaign Manager', 'Buffer', 'Hootsuite',
+            'Later', 'Sprout Social', 'Adobe Premiere Pro', 'Final Cut Pro',
+            'DaVinci Resolve', 'OBS Studio', 'Streamlabs', 'Audacity', 'Adobe Audition',
+            'WordPress', 'Webflow', 'Shopify', 'MailChimp', 'Constant Contact'
+        ]
+    },
+    engineering: {
+        name: "Engineering & CAD",
+        apps: [
+            'AutoCAD', 'SolidWorks', 'CATIA', 'Fusion 360', 'SketchUp', 'Revit',
+            'ArchiCAD', 'Civil 3D', 'Inventor', 'Rhino', 'MATLAB', 'Simulink',
+            'LabVIEW', 'Quartus Prime', 'Vivado', 'KiCad', 'Eagle', 'Altium Designer'
+        ]
+    },
+    science: {
+        name: "Science & Research",
+        apps: [
+            'RStudio', 'Jupyter Notebook', 'Jupyter Lab', 'SPSS', 'SAS', 'Stata',
+            'Origin Pro', 'GraphPad Prism', 'ChemDraw', 'Gaussview', 'ImageJ',
+            'Zotero', 'Mendeley', 'EndNote', 'LaTeX', 'Overleaf', 'Mathematica',
+            'Maple', 'PyMOL', 'BLAST'
+        ]
+    },
+    education: {
+        name: "Education & Learning",
+        apps: [
+            'Moodle', 'Blackboard', 'Canvas', 'Google Classroom', 'Kahoot!',
+            'Quizlet', 'Duolingo', 'Anki', 'Coursera', 'edX', 'Udemy',
+            'Pluralsight', 'LinkedIn Learning', 'Skillshare', 'Brilliant'
+        ]
+    }
+};
+
+// Flatten the categories into a single array for efficient lookup
+const productiveApps = Object.values(productiveCategories)
+    .reduce((apps, category) => [...apps, ...category.apps], []);
+
+// Optional: Create a lookup map for better performance (O(1) lookup)
+const productiveAppsMap = new Map(
+    productiveApps.map(app => [app.toLowerCase(), true])
+);
 
 // Track total time and productive time
 let totalTimeSeconds = 0;
@@ -166,9 +232,9 @@ async function updateTimeTracking() {
     // Remove the 0.5 second check
     totalTimeSeconds += elapsedSeconds;
 
-    const isProductive = productiveApps.some(app => 
-      activeWindow?.owner?.name?.toLowerCase().includes(app.toLowerCase())
-    );
+    // Update the isProductive check in updateTimeTracking for better performance
+    const isProductive = activeWindow?.owner?.name && 
+        productiveAppsMap.has(activeWindow.owner.name.toLowerCase());
 
     if (isProductive) {
       productiveTimeSeconds += elapsedSeconds;
