@@ -9,11 +9,24 @@ if (!fs.existsSync(logDir)) {
     fs.mkdirSync(logDir);
 }
 
+// Clear logs on startup
+function clearLogs() {
+    const logFiles = ['error.log', 'combined.log', 'activity.log', 'exceptions.log'];
+    logFiles.forEach(file => {
+        const logPath = path.join(logDir, file);
+        if (fs.existsSync(logPath)) {
+            fs.writeFileSync(logPath, ''); // Clear file contents
+        }
+    });
+}
+
+clearLogs(); // Clear logs when logger is initialized
+
 // Custom log format
 const customFormat = winston.format.printf(({ level, message, timestamp, ...metadata }) => {
   let msg = `${timestamp} [${level}]: ${message}`;
-  if (Object.keys(metadata).length > 0) {
-    msg += ` ${JSON.stringify(metadata)}`;
+  if (Object.keys(metadata).length > 0 && metadata.metadata) {
+    msg += ` ${JSON.stringify(metadata.metadata, null, 2)}`;
   }
   return msg;
 });
@@ -27,7 +40,7 @@ const workTrackerFormat = winston.format.printf(({ timestamp, level, message, ap
 });
 
 const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
+  level: 'debug', // Set to debug to capture more information
   format: winston.format.combine(
     winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     winston.format.errors({ stack: true }),
@@ -65,7 +78,21 @@ const logger = winston.createLogger({
     })
   ],
   // Don't exit on uncaught errors
-  exitOnError: false
+  exitOnError: false,
+  exceptionHandlers: [
+    new winston.transports.File({
+      filename: path.join(logDir, 'exceptions.log'),
+      maxsize: 5242880,
+      maxFiles: 5,
+    })
+  ],
+  rejectionHandlers: [
+    new winston.transports.File({
+      filename: path.join(logDir, 'exceptions.log'),
+      maxsize: 5242880,
+      maxFiles: 5,
+    })
+  ]
 });
 
 // Add exception handling
@@ -102,10 +129,51 @@ logger.logEfficiency = (efficiency, totalTime, productiveTime) => {
     });
 };
 
+// Enhanced error logging
 logger.logError = (error, context = '') => {
-    logger.error(`Error occurred ${context}`, {
-        error: error.message,
-        stack: error.stack
+    const errorInfo = {
+        message: error.message,
+        stack: error.stack,
+        context,
+        timestamp: new Date().toISOString(),
+        type: error.name,
+        code: error.code
+    };
+    
+    logger.error('Error occurred', { 
+        metadata: errorInfo
+    });
+};
+
+// Add debug logging for OCR
+logger.logOCR = (stage, details) => {
+    logger.debug('OCR Operation', {
+        metadata: {
+            stage,
+            ...details,
+            timestamp: new Date().toISOString()
+        }
+    });
+};
+
+// Add productivity analysis logging
+logger.logAnalysis = (details) => {
+    logger.info('Productivity Analysis', {
+        metadata: {
+            ...details,
+            timestamp: new Date().toISOString()
+        }
+    });
+};
+
+// Add API request logging
+logger.logAPIRequest = (endpoint, details) => {
+    logger.debug('API Request', {
+        metadata: {
+            endpoint,
+            ...details,
+            timestamp: new Date().toISOString()
+        }
     });
 };
 

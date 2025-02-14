@@ -1,6 +1,9 @@
 const { app, BrowserWindow, ipcMain, Tray, Menu } = require('electron');
 const path = require('path');
 const dataStore = require('./dataStore');
+const ProductivityAnalyzer = require('./productivityAnalyzer');
+require('dotenv').config();
+const fs = require('fs');
 
 // Add cache control switches
 app.commandLine.appendSwitch('disable-gpu-cache');
@@ -133,32 +136,53 @@ function formatTime(totalSeconds) {
   return `${hours}h ${minutes}m ${seconds}s`;
 }
 
-// Add function to save tracking data
+// Update saveTrackingData function
 function saveTrackingData() {
     const data = {
         totalTimeSeconds,
         productiveTimeSeconds,
-        isTracking
+        isTracking,
+        lastUpdateTime,
+        lastResult: analyzer.lastResult, // Save last analysis result
+        timestamp: Date.now()
     };
     dataStore.saveData(data);
+    logger.debug('Saved tracking data', { metadata: data });
 }
 
-// Modify loadTrackingData function
+// Update loadTrackingData function
 function loadTrackingData() {
     const data = dataStore.loadData();
-    if (data) {
-        totalTimeSeconds = data.totalTimeSeconds || 0;
-        productiveTimeSeconds = data.productiveTimeSeconds || 0;
-        isTracking = data.isTracking || false;
+    if (data && data.totalTimeSeconds !== undefined) {
+        // Restore tracking data
+        totalTimeSeconds = data.totalTimeSeconds;
+        productiveTimeSeconds = data.productiveTimeSeconds;
+        isTracking = data.isTracking;
         
-        // Send initial state to renderer
-        if (win && !win.isDestroyed()) {
-            // First send the tracking state
-            win.webContents.send('restore-tracking-state', {
-                isTracking: isTracking,
+        // Only set lastUpdateTime if tracking was active
+        lastUpdateTime = isTracking ? Date.now() : null;
+
+        const efficiency = Math.round(calculateEfficiency());
+        
+        logger.info('Restored tracking data', {
+            metadata: {
                 totalTime: formatTime(totalTimeSeconds),
                 productiveTime: formatTime(productiveTimeSeconds),
-                efficiency: Math.round(calculateEfficiency())
+                efficiency,
+                isTracking
+            }
+        });
+
+        if (win && !win.isDestroyed()) {
+            win.webContents.send('restore-tracking-state', {
+                isTracking,
+                totalTime: formatTime(totalTimeSeconds),
+                productiveTime: formatTime(productiveTimeSeconds),
+                efficiency,
+                currentApp: isTracking ? 'Resuming...' : 'Not tracking',
+                isProductive: data.lastResult?.isProductive || false,
+                category: data.lastResult?.category || 'Unknown',
+                confidence: data.lastResult?.confidence || 1.0
             });
         }
     }
@@ -166,12 +190,25 @@ function loadTrackingData() {
 
 // Listen for start/stop tracking commands from renderer
 ipcMain.on('toggle-tracking', (event, shouldTrack) => {
-  isTracking = shouldTrack;
-  if (!shouldTrack) {
-    // Pause the timestamp when stopping
-    lastUpdateTime = null;
-  }
-  saveTrackingData();
+    isTracking = shouldTrack;
+    lastUpdateTime = shouldTrack ? Date.now() : null;
+    
+    logger.info(`Tracking ${shouldTrack ? 'started' : 'stopped'}`);
+    
+    if (!shouldTrack) {
+        saveTrackingData();
+    }
+    
+    // Send immediate feedback to renderer
+    if (win && !win.isDestroyed()) {
+        win.webContents.send('tracking-update', {
+            currentApp: shouldTrack ? 'Starting...' : 'Not tracking',
+            isProductive: false,
+            efficiency: Math.round(calculateEfficiency()),
+            totalTime: formatTime(totalTimeSeconds),
+            productiveTime: formatTime(productiveTimeSeconds)
+        });
+    }
 });
 
 // Add/modify these IPC handlers
@@ -213,194 +250,203 @@ ipcMain.on('reset-data', () => {
     }
 });
 
-// Modify the updateTimeTracking function for better performance
+// Replace OpenAI initialization with Hugging Face
+const analyzer = new ProductivityAnalyzer(productiveCategories, productiveAppsMap);
+
+// Update updateTimeTracking function
 async function updateTimeTracking() {
-  if (!isTracking) return;
+    if (!isTracking) return;
 
-  try {
-    const activeWindow = await activeWin();
-    const currentTime = Date.now();
-    
-    // Initialize lastUpdateTime if it's the first run
-    if (!lastUpdateTime) {
-      lastUpdateTime = currentTime;
-      return;
+    try {
+        const currentTime = Date.now();
+        
+        if (!lastUpdateTime) {
+            lastUpdateTime = currentTime;
+            return;
+        }
+
+        const elapsedSeconds = (currentTime - lastUpdateTime) / 1000;
+        const activeWindow = await activeWin();
+        
+        // Quick update based on cached results or app name
+        const quickResult = await analyzer.getQuickAnalysis(activeWindow);
+        
+        // Update total time and productive time based on quick analysis
+        totalTimeSeconds += elapsedSeconds;
+        if (quickResult.isProductive) {
+            productiveTimeSeconds += elapsedSeconds;
+        }
+
+        const efficiency = Math.round(calculateEfficiency());
+
+        // Send immediate UI update with consistent productivity state
+        if (win && !win.isDestroyed()) {
+            win.webContents.send('tracking-update', {
+                currentApp: activeWindow?.owner?.name || 'Unknown',
+                isProductive: quickResult.isProductive,
+                efficiency: efficiency,
+                totalTime: formatTime(totalTimeSeconds),
+                productiveTime: formatTime(productiveTimeSeconds),
+                category: quickResult.category,
+                confidence: quickResult.confidence,
+                isQuickResult: true
+            });
+        }
+
+        lastUpdateTime = currentTime;
+
+        // Perform full AI analysis in background and update if different
+        analyzer.analyzeProductivityAsync(activeWindow).then(analysis => {
+            if (analysis && win && !win.isDestroyed()) {
+                // If AI analysis differs from quick analysis, adjust the productive time
+                if (analysis.isProductive !== quickResult.isProductive) {
+                    if (analysis.isProductive) {
+                        productiveTimeSeconds += elapsedSeconds;
+                    } else {
+                        productiveTimeSeconds -= elapsedSeconds;
+                    }
+                    
+                    // Send updated stats
+                    win.webContents.send('tracking-update', {
+                        currentApp: activeWindow?.owner?.name || 'Unknown',
+                        isProductive: analysis.isProductive,
+                        efficiency: Math.round(calculateEfficiency()),
+                        totalTime: formatTime(totalTimeSeconds),
+                        productiveTime: formatTime(productiveTimeSeconds),
+                        category: analysis.category,
+                        confidence: analysis.confidence,
+                        isQuickResult: false
+                    });
+                }
+            }
+        });
+
+    } catch (error) {
+        logger.logError(error, 'Error in updateTimeTracking');
     }
-
-    const elapsedSeconds = (currentTime - lastUpdateTime) / 1000;
-    
-    // Remove the 0.5 second check
-    totalTimeSeconds += elapsedSeconds;
-
-    // Update the isProductive check in updateTimeTracking for better performance
-    const isProductive = activeWindow?.owner?.name && 
-        productiveAppsMap.has(activeWindow.owner.name.toLowerCase());
-
-    if (isProductive) {
-      productiveTimeSeconds += elapsedSeconds;
-    }
-
-    const efficiency = calculateEfficiency();
-
-    // Batch updates to renderer
-    if (win && !win.isDestroyed()) {
-      win.webContents.send('tracking-update', {
-        currentApp: activeWindow?.owner?.name || 'Unknown',
-        isProductive: isProductive,
-        efficiency: Math.round(efficiency),
-        totalTime: formatTime(totalTimeSeconds),
-        productiveTime: formatTime(productiveTimeSeconds)
-      });
-    }
-
-    // Update last update time
-    lastUpdateTime = currentTime;
-
-  } catch (error) {
-    logger.logError(error, 'Error in updateTimeTracking');
-  }
 }
 
 // Add this function to create tray
 function createTray() {
-  if (tray) return;
+    if (tray) return;
 
-  tray = new Tray(path.join(__dirname, 'assets/icon.ico'));
-  const contextMenu = Menu.buildFromTemplate([
-    {
-      label: 'Show',
-      click: () => {
+    tray = new Tray(path.join(__dirname, 'assets/icon.ico'));
+    const contextMenu = Menu.buildFromTemplate([
+        {
+            label: 'Show',
+            click: () => {
+                win.show();
+                win.setSkipTaskbar(false);
+                win.setAlwaysOnTop(true, 'floating'); // Add this line
+            }
+        },
+        {
+            label: 'Quit',
+            click: () => {
+                app.quit();
+            }
+        }
+    ]);
+
+    tray.setToolTip('Work Tracker AI');
+    tray.setContextMenu(contextMenu);
+
+    // Double click on tray icon shows window
+    tray.on('double-click', () => {
         win.show();
-        win.setSkipTaskbar(true);
-      }
-    },
-    {
-      label: 'Quit',
-      click: () => {
-        app.quit();
-      }
-    }
-  ]);
-
-  tray.setToolTip('Work Tracker AI');
-  tray.setContextMenu(contextMenu);
-
-  // Double click on tray icon shows window
-  tray.on('double-click', () => {
-    win.show();
-    win.setSkipTaskbar(true);
-  });
+        win.setSkipTaskbar(false);
+        win.setAlwaysOnTop(true, 'floating'); // Add this line
+    });
 }
 
-// Modify createWindow function
+// Update createWindow function
 function createWindow() {
-  if (win !== null) return;
+    if (win !== null) return;
 
-  win = new BrowserWindow({
-    width: 900,
-    height: 700,
-    frame: false,
-    resizable: false,
-    transparent: true,
-    alwaysOnTop: true,
-    focusable: true,
-    hasShadow: false,
-    icon: path.join(__dirname, 'assets/icon.ico'),
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
-      offscreen: false,
-      webgl: false,
-      enableWebGL: false,
-      spellcheck: false,
-      backgroundThrottling: false,
-      partition: 'persist:main',
-      webSecurity: true
-    },
-    show: false,
-    backgroundColor: '#ffffff',
-    skipTaskbar: false
-  });
-
-  // Add session handling
-  const ses = win.webContents.session;
-  ses.clearCache().then(() => {
-    logger.info('Window cache cleared');
-  }).catch((err) => {
-    logger.logError(err, 'Window cache clearing failed');
-  });
-
-  // Add error handling
-  win.webContents.on('crashed', (event) => {
-    logger.logError(new Error('Window crashed'), 'Renderer Process');
-    app.relaunch();
-    app.exit(0);
-  });
-
-  win.on('minimize', () => {
-    win.setAlwaysOnTop(false);
-    win.setSkipTaskbar(false);
-  });
-
-  win.on('close', (event) => {
-    if (!app.isQuitting) {
-      event.preventDefault();
-      win.hide();
-      win.setSkipTaskbar(true);
-      if (!tray) {
-        createTray();
-      }
-    }
-    return false;
-  });
-
-  win.on('show', () => {
-    win.setAlwaysOnTop(true);
-    win.setSkipTaskbar(false);
-  });
-
-  win.on('blur', () => {
-    if (!win.isMinimized() && !win.isDestroyed() && win.isVisible()) {
-      win.moveTop();
-    }
-  });
-
-  win.once('ready-to-show', () => {
-    win.show();
-    loadTrackingData(); // Load saved data when window is ready
-  });
-
-  win.loadFile('index.html');
-
-  win.on('closed', () => {
-    win = null;
-  });
-}
-
-// Modify the app.on('ready') handler
-app.on('ready', async () => {
-  try {
-    const userDataPath = app.getPath('userData');
-    const cachePath = path.join(userDataPath, 'Cache');
-    const gpuCachePath = path.join(userDataPath, 'GPUCache');
-
-    const session = require('electron').session;
-    await session.defaultSession.clearCache();
-    await session.defaultSession.clearStorageData({
-      storages: ['cache', 'serviceworkers']
+    win = new BrowserWindow({
+        width: 900,
+        height: 680,
+        frame: false,
+        resizable: false,
+        show: false, // Don't show until ready
+        alwaysOnTop: true, // Add this line to keep window on top
+        skipTaskbar: false,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false,
+            offscreen: false,
+            webgl: false,
+            enableWebGL: false
+        }
     });
 
-    createWindow();
-  } catch (error) {
-    logger.logError(error, 'Cache clearing failed');
-  }
-});
+    // Set window to stay on top even after focus is lost
+    win.setAlwaysOnTop(true, 'floating');
 
-// Modify the interval timing
-app.whenReady().then(() => {
-  // Update every 50ms instead of 100ms
-  setInterval(updateTimeTracking, 50);
-  setupAutoSave();
+    // Optional: Add this to ensure it stays above full-screen applications
+    win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+
+    // Load the app
+    win.loadFile('index.html');
+
+    // Only show window when ready
+    win.once('ready-to-show', () => {
+        win.show();
+        loadTrackingData();
+        // Ensure always on top after showing
+        win.setAlwaysOnTop(true, 'floating');
+    });
+
+    // Handle window close
+    win.on('closed', () => {
+        win = null;
+    });
+
+    // Add focus handler to ensure always on top
+    win.on('focus', () => {
+        win.setAlwaysOnTop(true, 'floating');
+    });
+}
+
+// Remove the separate app.on('ready') handler and combine everything in app.whenReady()
+app.whenReady().then(async () => {
+    try {
+        // Setup cache directory first
+        const userDataPath = app.getPath('userData');
+        const cachePath = path.join(userDataPath, 'Cache');
+        const gpuCachePath = path.join(userDataPath, 'GPUCache');
+
+        // Ensure directories exist
+        if (!fs.existsSync(cachePath)) {
+            fs.mkdirSync(cachePath, { recursive: true, mode: 0o755 });
+        }
+        if (!fs.existsSync(gpuCachePath)) {
+            fs.mkdirSync(gpuCachePath, { recursive: true, mode: 0o755 });
+        }
+
+        // Set application user data path
+        app.setPath('userData', path.join(userDataPath, 'WorkTrackerAI'));
+
+        // Clear cache before creating window
+        const session = require('electron').session;
+        await session.defaultSession.clearCache();
+        await session.defaultSession.clearStorageData({
+            storages: ['cache', 'serviceworkers']
+        });
+
+        // Create window and start tracking
+        createWindow();
+        setInterval(updateTimeTracking, 1000);
+        setupAutoSave();
+
+        // Handle GPU process crashes
+        app.on('gpu-process-crashed', (event, killed) => {
+            logger.logError(new Error('GPU process crashed'), 'GPU Process');
+        });
+
+    } catch (error) {
+        logger.logError(error, 'Application initialization failed');
+    }
 });
 
 // Add auto-save interval
@@ -417,7 +463,8 @@ app.on('window-all-closed', () => {
 });
 
 // Add save on quit
-app.on('before-quit', () => {
+app.on('before-quit', async () => {
   app.isQuitting = true;
   saveTrackingData();
+  await analyzer.cleanup();
 });

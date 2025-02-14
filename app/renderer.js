@@ -25,6 +25,18 @@ document.addEventListener('DOMContentLoaded', () => {
         isTracking = !isTracking;
         updateToggleButton();
         ipcRenderer.send('toggle-tracking', isTracking);
+        
+        // Show loading state when starting
+        if (isTracking) {
+            setLoadingState(true);
+            document.getElementById('currentApp').textContent = 'Initializing';
+            document.getElementById('status').textContent = 'Status: Starting';
+        } else {
+            setLoadingState(false);
+            document.getElementById('currentApp').textContent = 'Not tracking';
+            document.getElementById('status').textContent = 'Status: Inactive';
+        }
+        document.getElementById('status').className = '';
     });
     
     // Function to update button appearance
@@ -140,14 +152,40 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Simplify the tracking-update handler
+// Add this after your DOMContentLoaded event listener
+function setLoadingState(isLoading) {
+    const container = document.querySelector('.loading-container');
+    if (isLoading) {
+        container.classList.add('show-loading');
+    } else {
+        container.classList.remove('show-loading');
+    }
+}
+
+// Modify the tracking-update handler
 ipcRenderer.on('tracking-update', (event, data) => {
     if (!isTracking) return;
+    
+    setLoadingState(false);
     
     const efficiency = document.getElementById('efficiency');
     const efficiencyValue = parseFloat(data.efficiency);
     
-    // Direct update without animations
+    // Add transition class for smooth updates
+    efficiency.classList.add('updating');
+    
+    if (data.isQuickResult) {
+        // For quick updates, use subtle animation
+        efficiency.classList.add('quick-update');
+    } else {
+        // For AI results, use more prominent animation
+        efficiency.classList.add('ai-update');
+    }
+    
+    // Update efficiency value
+    efficiency.textContent = `${Math.round(efficiencyValue)}%`;
+    
+    // Update efficiency class
     efficiency.classList.remove('low-efficiency', 'medium-efficiency', 'high-efficiency');
     if (efficiencyValue < 30) {
         efficiency.classList.add('low-efficiency');
@@ -157,7 +195,10 @@ ipcRenderer.on('tracking-update', (event, data) => {
         efficiency.classList.add('high-efficiency');
     }
     
-    efficiency.textContent = `${Math.round(efficiencyValue)}%`;
+    // Remove animation classes after transition
+    setTimeout(() => {
+        efficiency.classList.remove('updating', 'quick-update', 'ai-update');
+    }, 300);
 
     // Update other elements
     document.getElementById('currentApp').textContent = data.currentApp;
@@ -172,6 +213,7 @@ ipcRenderer.on('tracking-update', (event, data) => {
 // Modify the restore-tracking-state handler
 ipcRenderer.on('restore-tracking-state', (event, data) => {
     isTracking = data.isTracking;
+    setLoadingState(data.isTracking); // Show loading if tracking is active
     
     // Update button state
     const toggleButton = document.getElementById('trackingToggle');

@@ -13,11 +13,16 @@
     "electron-builder": "^24.9.1"
   },
   "dependencies": {
+    "tesseract.js": "^4.1.1",
     "@npmcli/fs": "^3.1.0",
     "active-win": "^8.1.1",
     "glob": "^9.3.5",
     "lru-cache": "^7.14.1",
-    "winston": "^3.11.0"
+    "winston": "^3.11.0",
+    "openai": "^4.0.0",
+    "screenshot-desktop": "^1.15.0",
+    "dotenv": "^16.3.1",
+    "node-fetch": "^2.6.1"
   },
   "keywords": [],
   "author": "Aleksandar Kanchev",
