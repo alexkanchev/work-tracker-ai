@@ -7,7 +7,8 @@
 
 ## 📖 Overview
 
-Work Tracker AI is a sleek, modern desktop application that helps you monitor and improve your productivity. It runs silently in the background, tracking your application usage and providing real-time efficiency scores.
+Work Tracker AI is a sleek, modern desktop application that helps you monitor and improve your productivity. It runs silently in the background, tracking your application usage and providing real-time efficiency scores powered by AI analysis.
+Uses TesseractOCR and Facebook's BART AI to determine what the user's doing.
 
 ## 🎨 Screenshots
 
@@ -19,23 +20,17 @@ Work Tracker AI is a sleek, modern desktop application that helps you monitor an
 
 ## ✨ Key Features
 
-### 🎯 Real-Time Tracking
-- Automatic application monitoring
-- Intelligent productivity categorization
-- Real-time efficiency scoring
-- Dark/Light theme support
-
-### 💻 Developer-Focused
-- Recognizes popular IDEs and development tools
-- Tracks coding time across different editors
-- Supports version control applications
-- Includes terminal and command-line tools
+### 🎯 Advanced Tracking & Analysis
+- Real-time application monitoring with AI-powered classification
+- Intelligent productivity categorization using HuggingFace's BART model
+- Dynamic content analysis for web applications
+- Configurable caching system for optimal performance
+- Efficiency scoring with visual feedback
 
 ### 🛡️ Privacy & Performance
-- Local-only data processing
-- No cloud synchronization
-- Minimal resource usage
-- Completely private tracking
+- Local-only data processing and storage
+- Efficient caching system for quick analysis
+- No cloud synchronization required
 
 ## 🚀 Getting Started
 
@@ -43,6 +38,7 @@ Work Tracker AI is a sleek, modern desktop application that helps you monitor an
 - Node.js (v14 or higher)
 - npm package manager
 - Windows 10+
+- HuggingFace API token (for AI analysis)
 
 ### Installation
 
@@ -66,27 +62,42 @@ npm start
 npm run dist
 ```
 
-## 🎨 Interface
+### Environment Setup
+Create a `.env` file with:
+```env
+HUGGINGFACE_TOKEN=your_token_here  # Required for AI-powered content analysis
+```
 
-- **Clean, Modern Design**: Minimalist interface with smooth animations
-- **Real-Time Updates**: Live efficiency tracking and application monitoring
-- **Dark Mode**: Built-in dark mode support
+### System Requirements
+- Windows 10 or later
+- Node.js v14 or higher
+- 4GB RAM minimum
+- 500MB free disk space
 
-## 🐛 Bug Reports
+## 🐛 Bug Reports & Feedback
 
-Found a bug? Please open an issue and include:
-- Operating system version
+When reporting issues, please include:
+- Operating system version and build
+- Node.js version
 - Steps to reproduce
-- Expected vs actual behavior
-- Screenshots if applicable
+- Log files (located in the app's user data directory)
+- Screenshots/recordings if applicable
+- Error messages from the console
 
-## 🔮 Roadmap
+## 🔮 Upcoming Features
 
-- [ ] Data persistence between sessions
-- [ ] Custom application categories
+- [x] Data persistence between sessions
+- [x] Comprehensive application categories
+- [x] Real-time AI analysis
+- [x] Dark/Light theme support
+- [x] System tray integration
+- [x] Session management
+- [ ] Custom category management
 - [ ] Detailed analytics dashboard
-- [ ] Export capabilities
-- [ ] Activity insights and suggestions
+- [ ] Data export capabilities
+- [ ] Enhanced OCR functionality
+- [ ] Multi-monitor support
+- [ ] Activity insights and recommendations
 
 ## 📄 License
 
@@ -95,6 +106,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE.txt) 
 ## 🙏 Acknowledgments
 
 - Icon by Adrien Coquet from Noun Project
+- BART model by Facebook/HuggingFace
+- Tesseract OCR for text recognition
+- Electron for cross-platform support
 
 ---
 
