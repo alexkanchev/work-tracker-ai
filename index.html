@@ -37,11 +37,23 @@
             </button>
         </div>
         
-        <button id="trackingToggle" class="toggle-button">
+        <!-- Remove this standalone button -->
+        <!-- <button id="trackingToggle" class="toggle-button">
             <span class="material-icons">play_arrow</span>
             <span class="button-text">Start Tracking</span>
-        </button>
+        </button> -->
         
+        <!-- Keep only this one inside button-container -->
+        <div class="button-container">
+            <button id="trackingToggle" class="toggle-button">
+                <span class="material-icons">play_arrow</span>
+                <span class="button-text">Start Tracking</span>
+            </button>
+            <button id="resetData" class="reset-button" title="Reset All Data">
+                <span class="material-icons">delete_forever</span>
+            </button>
+        </div>
+
         <!-- Update the stats container section -->
         <div class="stats-container">
             <div class="top-stats">

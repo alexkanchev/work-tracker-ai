@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, Tray, Menu } = require('electron');
 const path = require('path');
+const dataStore = require('./dataStore');
 
 // Add cache control switches
 app.commandLine.appendSwitch('disable-gpu-cache');
@@ -51,6 +52,7 @@ const productiveApps = [
 let totalTimeSeconds = 0;
 let productiveTimeSeconds = 0;
 let lastUpdateTime = null;
+let isTracking = false;
 
 // Function to calculate efficiency score
 function calculateEfficiency() {
@@ -65,8 +67,36 @@ function formatTime(totalSeconds) {
   return `${hours}h ${minutes}m ${seconds}s`;
 }
 
-// Add tracking state
-let isTracking = false;
+// Add function to save tracking data
+function saveTrackingData() {
+    const data = {
+        totalTimeSeconds,
+        productiveTimeSeconds,
+        isTracking
+    };
+    dataStore.saveData(data);
+}
+
+// Modify loadTrackingData function
+function loadTrackingData() {
+    const data = dataStore.loadData();
+    if (data) {
+        totalTimeSeconds = data.totalTimeSeconds || 0;
+        productiveTimeSeconds = data.productiveTimeSeconds || 0;
+        isTracking = data.isTracking || false;
+        
+        // Send initial state to renderer
+        if (win && !win.isDestroyed()) {
+            // First send the tracking state
+            win.webContents.send('restore-tracking-state', {
+                isTracking: isTracking,
+                totalTime: formatTime(totalTimeSeconds),
+                productiveTime: formatTime(productiveTimeSeconds),
+                efficiency: Math.round(calculateEfficiency())
+            });
+        }
+    }
+}
 
 // Listen for start/stop tracking commands from renderer
 ipcMain.on('toggle-tracking', (event, shouldTrack) => {
@@ -75,6 +105,7 @@ ipcMain.on('toggle-tracking', (event, shouldTrack) => {
     // Pause the timestamp when stopping
     lastUpdateTime = null;
   }
+  saveTrackingData();
 });
 
 // Add/modify these IPC handlers
@@ -92,6 +123,28 @@ ipcMain.on('close-window', () => {
   if (win) {
     win.close();
   }
+});
+
+// Add with other ipcMain handlers
+ipcMain.on('reset-data', () => {
+    // Reset all tracking variables
+    totalTimeSeconds = 0;
+    productiveTimeSeconds = 0;
+    lastUpdateTime = null;
+    isTracking = false;
+
+    // Save reset state
+    saveTrackingData();
+
+    // Update renderer with reset state
+    if (win && !win.isDestroyed()) {
+        win.webContents.send('restore-tracking-state', {
+            isTracking: false,
+            totalTime: '0h 0m 0s',
+            productiveTime: '0h 0m 0s',
+            efficiency: 0
+        });
+    }
 });
 
 // Modify the updateTimeTracking function for better performance
@@ -248,6 +301,7 @@ function createWindow() {
 
   win.once('ready-to-show', () => {
     win.show();
+    loadTrackingData(); // Load saved data when window is ready
   });
 
   win.loadFile('index.html');
@@ -280,7 +334,15 @@ app.on('ready', async () => {
 app.whenReady().then(() => {
   // Update every 50ms instead of 100ms
   setInterval(updateTimeTracking, 50);
+  setupAutoSave();
 });
+
+// Add auto-save interval
+function setupAutoSave() {
+    setInterval(() => {
+        saveTrackingData();
+    }, 30000); // Save every 30 seconds
+}
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
@@ -288,6 +350,8 @@ app.on('window-all-closed', () => {
   }
 });
 
+// Add save on quit
 app.on('before-quit', () => {
   app.isQuitting = true;
+  saveTrackingData();
 });

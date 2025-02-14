@@ -97,6 +97,47 @@ document.addEventListener('DOMContentLoaded', () => {
             modal.classList.remove('active');
         }
     });
+
+    // Add after your DOMContentLoaded event listener
+    document.getElementById('resetData').addEventListener('click', () => {
+        const confirmModal = document.createElement('div');
+        confirmModal.className = 'confirm-modal';
+        confirmModal.innerHTML = `
+            <div class="confirm-modal-content">
+                <h3>Reset All Data?</h3>
+                <p>This will delete all tracking data. This action cannot be undone.</p>
+                <div class="confirm-buttons">
+                    <button class="confirm-button confirm-yes">Yes, Reset</button>
+                    <button class="confirm-button confirm-no">Cancel</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(confirmModal);
+        
+        // Show modal with animation
+        setTimeout(() => confirmModal.classList.add('active'), 10);
+
+        // Handle button clicks
+        confirmModal.querySelector('.confirm-yes').addEventListener('click', () => {
+            ipcRenderer.send('reset-data');
+            confirmModal.classList.remove('active');
+            setTimeout(() => confirmModal.remove(), 300);
+        });
+
+        confirmModal.querySelector('.confirm-no').addEventListener('click', () => {
+            confirmModal.classList.remove('active');
+            setTimeout(() => confirmModal.remove(), 300);
+        });
+
+        // Close on outside click
+        confirmModal.addEventListener('click', (e) => {
+            if (e.target === confirmModal) {
+                confirmModal.classList.remove('active');
+                setTimeout(() => confirmModal.remove(), 300);
+            }
+        });
+    });
 });
 
 // Simplify the tracking-update handler
@@ -126,4 +167,43 @@ ipcRenderer.on('tracking-update', (event, data) => {
         data.isProductive ? 'productive' : 'non-productive';
     document.getElementById('totalTime').textContent = data.totalTime;
     document.getElementById('productiveTime').textContent = data.productiveTime;
+});
+
+// Modify the restore-tracking-state handler
+ipcRenderer.on('restore-tracking-state', (event, data) => {
+    isTracking = data.isTracking;
+    
+    // Update button state
+    const toggleButton = document.getElementById('trackingToggle');
+    const buttonIcon = toggleButton.querySelector('.material-icons');
+    const buttonText = toggleButton.querySelector('.button-text');
+    
+    if (isTracking) {
+        buttonIcon.textContent = 'stop';
+        buttonText.textContent = 'Stop Tracking';
+        toggleButton.classList.add('stopping');
+    }
+
+    // Update efficiency display
+    const efficiency = document.getElementById('efficiency');
+    const efficiencyValue = data.efficiency;
+    
+    efficiency.classList.remove('low-efficiency', 'medium-efficiency', 'high-efficiency');
+    if (efficiencyValue < 30) {
+        efficiency.classList.add('low-efficiency');
+    } else if (efficiencyValue < 70) {
+        efficiency.classList.add('medium-efficiency');
+    } else {
+        efficiency.classList.add('high-efficiency');
+    }
+    
+    efficiency.textContent = `${Math.round(efficiencyValue)}%`;
+
+    // Update time displays
+    document.getElementById('totalTime').textContent = data.totalTime;
+    document.getElementById('productiveTime').textContent = data.productiveTime;
+    // Show "Not tracking" or "Ready" instead of "Restoring..."
+    document.getElementById('currentApp').textContent = isTracking ? 'Ready' : 'Not tracking';
+    document.getElementById('status').textContent = 'Status: Ready';
+    document.getElementById('status').className = ''; // Remove any status classes until first update
 });
