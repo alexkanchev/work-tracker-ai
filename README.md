@@ -8,7 +8,8 @@
 ## 📖 Overview
 
 Work Tracker AI is a sleek, modern desktop application that helps you monitor and improve your productivity. It runs silently in the background, tracking your application usage and providing real-time efficiency scores powered by AI analysis.
-Uses TesseractOCR and Facebook's BART AI to determine what the user's doing.
+
+Uses TesseractOCR and Facebook's BART AI to determine what the user is doing.
 
 ## 🎨 Screenshots
 
