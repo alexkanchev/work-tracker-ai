@@ -4,7 +4,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder",
+    "build": "electron-builder --win",
     "dist": "electron-builder --windows",
     "dist-cmd": "cmd.exe /c electron-builder --windows"
   },
@@ -13,7 +13,11 @@
     "electron-builder": "^24.9.1"
   },
   "dependencies": {
-    "active-win": "^8.1.1"
+    "@npmcli/fs": "^3.1.0",
+    "active-win": "^8.1.1",
+    "glob": "^9.3.5",
+    "lru-cache": "^7.14.1",
+    "winston": "^3.11.0"
   },
   "keywords": [],
   "author": "Aleksandar Kanchev",
@@ -21,13 +25,13 @@
   "type": "commonjs",
   "description": "AI-powered productivity tracker",
   "build": {
-    "appId": "com.worktracker.ai",
+    "appId": "com.worktracker.app",
     "productName": "Work Tracker AI",
     "directories": {
       "output": "dist"
     },
     "win": {
-      "target": ["nsis"],
+      "target": "nsis",
       "icon": "assets/icon.ico",
       "signAndEditExecutable": false
     },

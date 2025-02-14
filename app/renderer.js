@@ -64,6 +64,13 @@ document.addEventListener('DOMContentLoaded', () => {
         ipcRenderer.send('close-window');
     });
 
+    // Add this after your existing minimize button handler
+    ipcRenderer.on('minimize-to-tray', () => {
+        const notification = new Notification('Work Tracker AI', {
+            body: 'Application is still running in the system tray'
+        });
+    });
+
     // Info modal functionality
     const modal = document.getElementById('infoModal');
     const infoBtn = document.getElementById('infoBtn');
